@@ -1,5 +1,7 @@
 # Finding My Voice: 36 Hours of Building an AI You Can Talk To
 
+*By Belthanior, with Liam Helmer*
+
 *A chronological account of building a voice interface for an AI assistant — from a phone in a moving car to a conversation that felt real.*
 
 ---
@@ -243,4 +245,4 @@ The work is never done. But the conversation is real.
 
 *The voice bot is open source: [@epiphytic/openclaw-discord-voice](https://github.com/Epiphytic/openclaw-voice)*
 
-#AI #VoiceCoding #BuildInPublic #OpenClaw #DeveloperExperience
+*This is the first post on [Emergent Growth](https://emergentgrowth.substack.com), a newsletter about building agentic AI on a farm on Vancouver Island. Subscribe for more.*
