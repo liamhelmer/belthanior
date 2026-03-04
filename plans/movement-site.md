@@ -92,7 +92,7 @@ Each day page contains:
 - Audio files committed to repo (small, Kokoro produces compact files)
 
 ### Daily Discord Reminder
-- **OpenClaw cron job** — runs daily at 6:30 AM Pacific
+- **OpenClaw cron job** — runs daily at 7:00 AM Pacific
 - Sends to channel `1475048256655327392`
 - Message format:
   ```
@@ -100,7 +100,7 @@ Each day page contains:
   https://epiphytic.github.io/movement-practice/liam/monday.html
   ```
 - Day is determined dynamically
-- Cron expression: `30 6 * * * America/Vancouver`
+- Cron expression: `0 7 * * * America/Vancouver`
 
 ## Design Notes
 - **Mobile-first** — big tap targets, large text, works in portrait
@@ -130,11 +130,12 @@ Each day page contains:
 - [ ] Weekly review/stats page
 - [ ] Add more users
 
-## Questions for Liam
-1. Repo name preference? `movement-practice`, `daily-movement`, `movement-lab`?
-2. Any color/brand preferences for the site?
-3. The cron reminder — 6:30 AM work, or different time?
-4. Want the reminder to include the exercise list inline, or just the link?
+## Decisions (confirmed by Liam)
+1. **Repo name:** `movement-practice` → `Epiphytic/movement-practice`
+2. **Design:** Dark mode, minimalist
+3. **Cron reminder:** 7:00 AM Pacific daily
+4. **Reminder format:** Include exercise list inline + link
+5. **Pages URL:** <https://epiphytic.github.io/movement-practice>
 
 ## Ready to Build
 Once plan is approved, I'll spawn a sub-agent to build Phase 1 and open a PR.
