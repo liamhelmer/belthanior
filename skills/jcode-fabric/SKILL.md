@@ -22,12 +22,15 @@ Example output:
 
 ```
 Worker: @bel-worker:ca1-beta.mxdx.dev (host: belthanior)
-  Tool: jcode v0.7.2 [healthy]
-    cwd              string              Absolute working directory path
+  Tool: jcode vunknown [healthy]
+    cwd              string               Absolute working directory path (no .. components)
+    model            string               Model override (e.g. claude-opus-4-6)
     prompt           string   (required)  Task prompt
+    quiet            boolean              Suppress status output
+    resume_session   string               Session UUID to resume a prior jcode session
 ```
 
-Each tool entry shows: name, version, health status, and an `inputSchema` listing accepted fields (type, required/optional, description). Use this output to determine what payload fields the worker currently accepts before posting a task.
+Each tool entry shows: name, version, health status, and accepted fields (type, required/optional, description). Always run this before posting to confirm which fields the worker currently accepts.
 
 ## Post a Task
 
@@ -39,8 +42,6 @@ fabric post \
 ```
 
 The `post` command blocks until the result comes back (or timeout). Output is raw NDJSON (jcode streaming format) — decode at the caller layer, not in the skill.
-
-To pass fields like `cwd` or `model`, embed them in the prompt as context or wait for payload-passthrough to be added to the CLI.
 
 ## Typical Invocation (via subagent)
 
