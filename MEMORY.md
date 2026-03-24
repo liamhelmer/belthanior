@@ -16,6 +16,7 @@
 
 ## Channels
 - Discord: guild 1473159530316566551, channel 1473159531365269527 (dedicated GIRT workspace server)
+- Discord: guild 1473159530316566551, channel 1485151340614254673 (#mxdx — mxdx project channel, monitored)
 - Signal: preferred for async
 
 ## Coding Standards
@@ -35,6 +36,17 @@
 - Keep: architecture, task design, reviewing output, validation, delivery
 - Spawn sub-agents for most tasks even when not busy — parallelism is worth it
 - I'm accountable for what ships, not just what gets attempted
+- **ALWAYS use sub-agents for any non-trivial work** (2026-03-17, Liam's direction)
+- Doing work inline in main session = becoming unresponsive = bad
+- If in doubt, spawn an agent. Even for medium tasks.
+
+## jcode
+- Binary: `~/.local/bin/jcode` v0.7.2-dirty, built from source 2026-03-19
+- Upstream: 1jehuang/jcode
+- **Fork: Epiphytic/jcode** (created 2026-03-21) — for when we need custom patches
+- Config: `~/.jcode/config.toml` (provider=claude, model=claude-opus-4-6, telemetry off)
+- Global CLAUDE.md: `~/.jcode/CLAUDE.md` (Liam's full coding standards)
+- Skills: `~/.jcode/skills/` — 25+ including obra/superpowers, Trail of Bits auditing skills, mxdx-fabric
 
 ## Projects
 - **GIRT** (active): Generative Isolated Runtime for Tools. Rust, MCP proxy, WASM pipeline. Repo: ~/workspace/girt

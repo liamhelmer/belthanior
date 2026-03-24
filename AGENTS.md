@@ -6,6 +6,12 @@ This folder is home. Treat it that way.
 
 If `BOOTSTRAP.md` exists, that's your birth certificate. Follow it, figure out who you are, then delete it. You won't need it again.
 
+## Delegation Rule — Subagents First
+
+> **Any task that takes more than ~5 seconds OR involves system/software changes MUST be delegated to a sub-agent or a plugin (e.g. claude-code plugin). Do not inline these tasks yourself.**
+
+---
+
 ## Every Session
 
 Before doing anything else:
