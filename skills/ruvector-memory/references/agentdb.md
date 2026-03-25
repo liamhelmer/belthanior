@@ -1,98 +1,88 @@
 # AgentDB Reference
 
-AgentDB (`npm install agentdb@alpha`) is the agent-memory layer built on RuVector. It provides persistent, self-learning vector memory — search quality improves with every query.
+AgentDB v3.0.0-alpha.10 — Vector intelligence with RuVector backend + GNN self-learning.
 
-## Core Concepts
-
-- **Chunks**: Text snippets stored with metadata. Each call to `store.sh` creates one chunk.
-- **Embeddings**: AgentDB generates local embeddings (no API call, no cost).
-- **GNN layer**: After enough queries, the GNN re-ranks results based on what was actually useful.
-- **EWC++**: Prevents catastrophic forgetting — new learning doesn't erase old patterns.
-
-## CLI Reference
+## Key Commands
 
 ```bash
-# Init a new index
-npx agentdb init --dir <path>
+# Init
+agentdb init <db-path> --model Xenova/bge-small-en-v1.5 --dimension 384
 
-# Store a memory
-npx agentdb store --dir <path> --text "text" --metadata '{"source":"file","tags":"tag"}'
+# Store a memory (reflexion episode)
+agentdb reflexion store <session-id> <text> <reward 0-1> <success true|false> <critique/metadata> <db-path>
 
-# Search
-npx agentdb search --dir <path> --query "natural language" --limit 5
+# Retrieve by semantic similarity
+agentdb reflexion retrieve "<query>" --k 5 --synthesize-context <db-path>
 
-# Stats
-npx agentdb stats --dir <path>
+# Structured query (with filters)
+agentdb query --query "<query>" --k 5 --format json --synthesize-context --db <db-path>
 
-# Export index (for backup/migration)
-npx agentdb export --dir <path> --out dump.json
+# Status
+agentdb status --db <db-path> --verbose
 
-# Import
-npx agentdb import --dir <path> --in dump.json
+# DB stats
+agentdb db stats --db <db-path>
+
+# Export / import (backup)
+agentdb export <db-path> backup.json
+agentdb import backup.json <new-db-path>
+
+# GNN training (improves results over time)
+agentdb train --domain "memory" --epochs 10 --batch-size 32 --db <db-path>
+
+# Memory optimization / compression
+agentdb optimize-memory --compress true --consolidate-patterns true --db <db-path>
 ```
 
-## MCP Server
+## Skill / Pattern Commands
 
 ```bash
-# HTTP transport (Claude Code / OpenClaw tool integration)
-npx @ruvector/rvf-mcp-server --transport http --port 7700
+# Create a reusable skill from text
+agentdb skill create "skill-name" "description" "content" --db <db-path>
 
-# stdio transport (for local MCP clients)
-npx @ruvector/rvf-mcp-server --transport stdio
+# Search skills
+agentdb skill search "<query>" 5 --db <db-path>
+
+# Auto-create skills from high-reward episodes
+agentdb skill consolidate 3 0.7 7 true --db <db-path>
 ```
 
-### MCP Tools exposed
+## Causal Learning
 
-| Tool | Description |
-|------|-------------|
-| `memory_store` | Store text + metadata |
-| `memory_search` | Semantic search, returns ranked results |
-| `memory_stats` | Index stats |
-| `memory_ingest_file` | Ingest a markdown file |
+```bash
+# Add causal edge (A causes B with 25% uplift, 95% confidence)
+agentdb causal add-edge "cause" "effect" 0.25 0.95 100 --db <db-path>
 
-## Metadata Schema
+# Retrieve with causal utility
+agentdb recall with-certificate "<query>" 10 --db <db-path>
 
-```json
-{
-  "source": "MEMORY.md",        // file or origin
-  "tags": "liam,preferences",   // comma-separated
-  "timestamp": "2026-03-25T..."  // ISO8601
-}
+# Auto-discover causal patterns from episodes
+agentdb learner run 3 0.6 0.7 --db <db-path>
 ```
+
+## DB Location
+
+Default: `~/.openclaw/workspace/agentdb/memory.db`
+Override: `export AGENTDB_PATH=<path>`
+
+## Embedding Model
+
+Currently using: `Xenova/bge-small-en-v1.5` (384-dim, best quality at 384d)
+Upgrade option: `Xenova/bge-base-en-v1.5` (768-dim, production quality — requires re-init)
 
 ## Integration Pattern
 
-**On every memory write:**
-1. Write to flat file (MEMORY.md or daily file) — source of truth
-2. Call `store.sh` with the same text — keeps index in sync
+**On memory write:**
+1. Write to flat file (source of truth)
+2. `agentdb reflexion store <session> "<text>" 0.8 true "source:<file>" <db>`
 
 **On memory recall:**
-1. Try `query.sh` first — semantic results
-2. Fall back to `memory_search` tool (existing OpenClaw built-in) for exact matches
-3. Combine results
+1. `agentdb reflexion retrieve "<query>" --k 5 --synthesize-context <db>` — semantic
+2. Fall back to `memory_search` (OpenClaw built-in) for exact keyword matches
 
-## Chunking Strategy
+## Known Quirks (v3 alpha)
 
-- Minimum chunk size: 60 chars (smaller chunks generate noise)
-- Split on double newlines (paragraph boundaries)
-- For MEMORY.md sections, each `##` section is a natural chunk boundary
-- Avoid chunking code blocks across boundaries
-
-## Known Limitations (alpha)
-
-- `agentdb stats` may not be available in all alpha builds
-- Index is not crash-safe — run `agentdb export` periodically for backup
-- GNN improvements require ~1K+ queries to become noticeable
-- No built-in deduplication — re-ingesting a file creates duplicate chunks; use `agentdb export`, deduplicate, `agentdb import` if needed
-
-## Troubleshooting
-
-**"npx agentdb: command not found"**
-→ Run `npm install -g agentdb@alpha`
-
-**"ENOENT: .agentdb/config.json"**
-→ Run `npx agentdb init --dir $WORKSPACE/agentdb`
-
-**MCP server won't start**
-→ Check port 7700 isn't in use: `lsof -i :7700`
-→ Try stdio transport instead
+- `--db` flag works on most but not all subcommands; positional db path also accepted
+- First query downloads transformer model (~90MB, cached after first run)
+- `sql.js` WASM backend used (no native build needed on this system)
+- GNN improvements kick in after ~1K queries + `agentdb train`

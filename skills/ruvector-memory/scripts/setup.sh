@@ -3,46 +3,33 @@
 set -euo pipefail
 
 WORKSPACE="${WORKSPACE:-$HOME/.openclaw/workspace}"
-AGENTDB_DIR="$WORKSPACE/agentdb"
+DB="$WORKSPACE/agentdb/memory.db"
 
 echo "=== RuVector Memory Setup ==="
 
-# Check node
-if ! command -v node &>/dev/null; then
-  echo "ERROR: node not found. Install Node.js first."
-  exit 1
-fi
-
 # Install agentdb
-echo "Installing AgentDB..."
-npm install -g agentdb@alpha 2>&1 | tail -3
+echo "Installing AgentDB (latest alpha)..."
+npm install -g agentdb@3.0.0-alpha.10 better-sqlite3 2>&1 | tail -3
 
-# Install ruvector MCP server
-echo "Installing RuVector MCP server..."
-npm install -g @ruvector/rvf-mcp-server 2>&1 | tail -3
+# Install real ML embeddings
+echo "Installing embeddings..."
+agentdb install-embeddings --global 2>&1 | tail -3
 
-# Init agentdb workspace
-mkdir -p "$AGENTDB_DIR"
-cd "$AGENTDB_DIR"
-
-if [ ! -f ".agentdb/config.json" ]; then
-  echo "Initializing AgentDB..."
-  npx agentdb init --dir "$AGENTDB_DIR" 2>&1 || echo "(init output above)"
+# Init DB
+mkdir -p "$(dirname "$DB")"
+if [ ! -f "$DB" ]; then
+  echo "Initializing AgentDB at $DB..."
+  agentdb init "$DB" --model Xenova/bge-small-en-v1.5 --dimension 384
 else
-  echo "AgentDB already initialized at $AGENTDB_DIR"
+  echo "AgentDB already exists at $DB"
 fi
 
 # Ingest existing memory files
 echo ""
 echo "Ingesting existing memory files..."
-if [ -f "$WORKSPACE/MEMORY.md" ]; then
-  bash "$(dirname "$0")/ingest.sh" "$WORKSPACE/MEMORY.md"
-fi
-if [ -d "$WORKSPACE/memory" ]; then
-  bash "$(dirname "$0")/ingest.sh" "$WORKSPACE/memory/"
-fi
+bash "$(dirname "$0")/ingest.sh" "$WORKSPACE/MEMORY.md" 2>/dev/null || true
+[ -d "$WORKSPACE/memory" ] && bash "$(dirname "$0")/ingest.sh" "$WORKSPACE/memory/" || true
 
 echo ""
+agentdb status --db "$DB"
 echo "=== Setup complete ==="
-echo "Index location: $AGENTDB_DIR"
-echo "Run: bash scripts/status.sh to verify"

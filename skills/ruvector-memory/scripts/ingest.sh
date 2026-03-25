@@ -1,47 +1,57 @@
 #!/usr/bin/env bash
-# Ingest memory files into the vector index
+# Ingest memory markdown files into AgentDB as reflexion episodes
 # Usage: ingest.sh <file-or-directory>
 set -euo pipefail
 
-WORKSPACE="${WORKSPACE:-$HOME/.openclaw/workspace}"
-AGENTDB_DIR="$WORKSPACE/agentdb"
+DB="${AGENTDB_PATH:-$HOME/.openclaw/workspace/agentdb/memory.db}"
 TARGET="${1:?Usage: ingest.sh <file-or-directory>}"
 
 ingest_file() {
   local file="$1"
   local filename
   filename=$(basename "$file")
-
-  # Skip non-markdown and hidden files
   [[ "$filename" == .* ]] && return
   [[ "$filename" != *.md ]] && return
 
   echo "Ingesting: $file"
 
-  # Split file into paragraphs and index each
-  python3 - "$file" "$AGENTDB_DIR" <<'PYEOF'
-import sys, subprocess, json, re
+  python3 - "$file" "$DB" <<'PYEOF'
+import sys, subprocess, re, os
 
 filepath = sys.argv[1]
-agentdb_dir = sys.argv[2]
-source = filepath
+db = sys.argv[2]
+source = os.path.basename(filepath)
 
 with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
     content = f.read()
 
-# Split on double newlines, filter short chunks
+# Split on double newlines, skip short/empty chunks
 chunks = [c.strip() for c in re.split(r'\n\n+', content) if len(c.strip()) > 60]
 
-for chunk in chunks:
-    meta = json.dumps({"source": source, "tags": "ingested", "timestamp": "auto"})
-    subprocess.run([
-        "npx", "agentdb", "store",
-        "--dir", agentdb_dir,
-        "--text", chunk,
-        "--metadata", meta
-    ], capture_output=True, cwd=agentdb_dir)
+stored = 0
+for i, chunk in enumerate(chunks):
+    session_id = f"ingest-{source}-{i}"
+    result = subprocess.run([
+        "agentdb", "reflexion", "store",
+        session_id,       # session-id
+        chunk,            # task (text)
+        "0.8",            # reward
+        "true",           # success
+        f"source:{source} ingested:true",  # critique/metadata
+        db                # db path (positional if --db not supported)
+    ], capture_output=True, text=True)
+    # Try --db flag if positional fails
+    if result.returncode != 0:
+        result = subprocess.run([
+            "agentdb", "reflexion", "store",
+            session_id, chunk, "0.8", "true",
+            f"source:{source} ingested:true",
+            "--db", db
+        ], capture_output=True, text=True)
+    if result.returncode == 0:
+        stored += 1
 
-print(f"  → {len(chunks)} chunks indexed from {filepath}")
+print(f"  → {stored}/{len(chunks)} chunks indexed from {filepath}")
 PYEOF
 }
 
