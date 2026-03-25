@@ -1,0 +1,2 @@
+# AgentDB creates a default DB in cwd if --db path resolves differently
+agentdb.db
