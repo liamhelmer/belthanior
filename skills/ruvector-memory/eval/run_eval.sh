@@ -190,7 +190,7 @@ if [[ "$SKIP_JUDGE" == "true" ]]; then
 else
     judge_count=$(wc -l < "$JUDGE_INPUT")
     echo "▸ Judging $judge_count results with Qwen2.5-32B..."
-    python3 "$SCRIPT_DIR/judge.py" --batch "$JUDGE_INPUT" --output "$JUDGE_OUTPUT"
+    python3 "$SCRIPT_DIR/judge.py" --batch "$JUDGE_INPUT" --output "$JUDGE_OUTPUT" --workers 4
     echo "  ✅ Judging complete"
     echo ""
 fi
@@ -444,6 +444,75 @@ with open(result_file, "w") as f:
     json.dump(full_results, f, indent=2)
 
 print(f"\n  📄 Full results saved to: {result_file}")
+
+# ─── Generate summary.md ─────────────────────────────────────────────
+summary_path = os.path.join(os.path.dirname(result_file), "summary.md")
+lines = []
+lines.append("# RuVector Memory Eval — Summary")
+lines.append("")
+lines.append(f"**Date:** {full_results['date']}")
+lines.append(f"**Test cases:** {test_count} | **Results per query:** 5")
+lines.append("")
+lines.append("## Metrics")
+lines.append("")
+lines.append("| Tier | System | Recall@1 | Recall@3 | Recall@5 | MRR | Avg Score |")
+lines.append("|------|--------|----------|----------|----------|-----|-----------|")
+for tier in tiers + ["overall"]:
+    for system in ["grep", "vector"]:
+        m = metrics[tier][system]
+        if not m:
+            continue
+        lines.append(
+            f"| {tier} | {system} | {m['recall_at_1']:.1f}% | {m['recall_at_3']:.1f}% "
+            f"| {m['recall_at_5']:.1f}% | {m['mrr']:.3f} | {m['avg_score']:.2f} |"
+        )
+lines.append("")
+lines.append("## Latency")
+lines.append("")
+lines.append(f"| System | Avg Latency |")
+lines.append(f"|--------|-------------|")
+lines.append(f"| grep   | {avg_grep_ms:.0f}ms       |")
+lines.append(f"| vector | {avg_vector_ms:.0f}ms       |")
+lines.append(f"| ratio  | {latency_ratio:.1f}x        |")
+lines.append("")
+lines.append("## Success Criteria")
+lines.append("")
+lines.append(f"1. {c1}")
+lines.append(f"2. {c2}")
+lines.append(f"3. {c3}")
+lines.append(f"4. {c4}")
+lines.append("")
+lines.append("## Interpretation")
+lines.append("")
+
+# Generate a verdict line
+pass_count = sum(1 for c in [c1, c2, c3, c4] if c.startswith("✅"))
+fail_count = sum(1 for c in [c1, c2, c3, c4] if c.startswith("❌"))
+if pass_count >= 3 and fail_count == 0:
+    verdict = "**PASS** — Vector search meets all pre-committed criteria."
+elif fail_count >= 2:
+    verdict = "**FAIL** — Vector search does not meet key criteria."
+else:
+    verdict = "**INCONCLUSIVE** — Mixed results; further tuning or more test cases needed."
+
+lines.append(f"**Verdict:** {verdict}")
+lines.append("")
+lines.append(
+    f"Vector search achieved {metrics['overall']['vector'].get('recall_at_3', 0):.1f}% Recall@3 overall "
+    f"vs grep's {metrics['overall']['grep'].get('recall_at_3', 0):.1f}%. "
+    f"On hard queries, the gap was {hard_diff:.1f}pp. "
+    f"Vector latency averaged {avg_vector_ms:.0f}ms ({latency_ratio:.1f}x grep), "
+    f"which {'is acceptable' if latency_ratio <= 10 else 'is high but may be justified by accuracy gains'}."
+)
+lines.append("")
+
+summary_text = "\n".join(lines)
+with open(summary_path, "w") as f:
+    f.write(summary_text)
+
+print(f"  📄 Summary saved to: {summary_path}")
+print()
+print(summary_text)
 PYTHON_SCRIPT
 
 echo ""
