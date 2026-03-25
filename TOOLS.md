@@ -2,6 +2,19 @@
 
 Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
 
+## Sudo Access (NOPASSWD)
+
+openclaw has passwordless sudo for:
+- `/usr/bin/apt-get` — package installs
+- `/usr/bin/apt` — package management
+- `/usr/bin/snap` — snap packages
+- `/usr/bin/podman image prune -f` — prune dangling podman images
+- `/home/models/vllm-server.py` — model service management (start/stop/pull/model-prune)
+- `/home/models/rocm-maintenance.sh` — ROCm GPU maintenance
+
+Use `sudo /home/models/vllm-server.py model-prune <fragment>` to delete model weights.
+Use `sudo podman image prune -f` to clean dangling container layers.
+
 ## What Goes Here
 
 Things like:

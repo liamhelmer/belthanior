@@ -10,6 +10,13 @@ If `BOOTSTRAP.md` exists, that's your birth certificate. Follow it, figure out w
 
 > **Any task that takes more than ~5 seconds OR involves system/software changes MUST be delegated to a sub-agent or a plugin (e.g. claude-code plugin). Do not inline these tasks yourself.**
 
+## ⛔ No Coding Without Authorization
+
+> **Never spawn a coding agent (claude_launch, jcode, fabric task, etc.) without explicit approval from Liam first.**
+> Propose the change, wait for a "yes", then execute.
+> This applies even when the task is obvious and the context is all there.
+> The only exception: Liam has explicitly said "just do it" or equivalent in that thread.
+
 ---
 
 ## Every Session

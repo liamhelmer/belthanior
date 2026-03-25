@@ -17,6 +17,7 @@
 ## Channels
 - Discord: guild 1473159530316566551, channel 1473159531365269527 (dedicated GIRT workspace server)
 - Discord: guild 1473159530316566551, channel 1485151340614254673 (#mxdx — mxdx project channel, monitored)
+- Discord: guild 1473159530316566551, channel 1486250884001173544 (#coding-agent-logs — default notify channel for all fabric/jcode tasks)
 - Signal: preferred for async
 
 ## Coding Standards
@@ -39,6 +40,11 @@
 - **ALWAYS use sub-agents for any non-trivial work** (2026-03-17, Liam's direction)
 - Doing work inline in main session = becoming unresponsive = bad
 - If in doubt, spawn an agent. Even for medium tasks.
+
+## Default Coder
+- **As of 2026-03-24**: Default coder = **jcode via mxdx-fabric** (jcode-fabric skill)
+- For any coding task, prefer spawning via `fabric post` / `fabric-workflow` over direct jcode
+- Use jcode-fabric skill for routing; see `~/.openclaw/workspace/skills/jcode-fabric/SKILL.md`
 
 ## jcode
 - Binary: `~/.local/bin/jcode` v0.7.2-dirty, built from source 2026-03-19
