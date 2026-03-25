@@ -1,6 +1,6 @@
 ---
 name: jcode
-description: "Run jcode (Rust coding agent using Claude Max OAuth) for coding tasks. Use when: (1) building/modifying code, (2) reviewing PRs or files, (3) iterative coding that needs file exploration. Supports Claude Max subscription via OAuth — no API key needed. For long-running tasks, auto-create a Discord webhook and pipe output to #jcode-mxdx channel. ALWAYS launch via sessions_spawn subagent — never run inline."
+description: "Run jcode (Rust coding agent using Claude Max OAuth) for coding tasks. Use when: (1) building/modifying code, (2) reviewing PRs or files, (3) iterative coding that needs file exploration. Supports Claude Max subscription via OAuth — no API key needed. For long-running tasks, submit via /fabric-submit and watch results on Discord. ALWAYS launch via sessions_spawn subagent — never run inline."
 ---
 
 ## ⚠️ Always use a subagent
@@ -8,7 +8,7 @@ description: "Run jcode (Rust coding agent using Claude Max OAuth) for coding ta
 jcode tasks take minutes. Always spawn a subagent so the main session stays responsive:
 
 ```
-sessions_spawn(task="Run jcode: [task description] in [path]. Post output to Discord webhook [url].")
+sessions_spawn(task="Run jcode: [task description] in [path]. Submit via /fabric-submit.")
 ```
 
 Never run jcode inline in the main session.
@@ -17,39 +17,42 @@ Never run jcode inline in the main session.
 
 jcode is a Rust-based coding agent that uses your Claude Max OAuth subscription.
 
-## Webhook-Per-Session Pattern (preferred for long tasks)
+## Submitting Tasks via Fabric (preferred)
 
-For any task longer than ~30s, create a session webhook, pipe output to Discord, delete when done.
+Use the `/fabric-submit` command to submit jcode tasks through the fabric coordinator. Results are automatically routed back to the specified channel.
 
-### 1. Create webhook
+### 1. Submit the task
 
-```bash
-OC_TOKEN="${OC_BOT_TOKEN}"
-JCODE_CHANNEL="1484445467944288278"
-SESSION_NAME="jcode-$(date +%Y%m%d-%H%M)-[project]"  # e.g. jcode-20260320-1630-girt
-
-WEBHOOK_URL=$(curl -s -X POST "https://discord.com/api/v10/channels/$JCODE_CHANNEL/webhooks" \
-  -H "Authorization: Bot $OC_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"name\": \"$SESSION_NAME\"}" | python3 -c "import sys,json; print(json.load(sys.stdin)['url'])")
+```
+/fabric-submit --capability jcode --cwd /path/to/project --timeout 1800 --channel discord Your task prompt here
 ```
 
-### 2. Run jcode, piping output to Discord
+Flags:
+- `--capability jcode` — use the jcode worker (default)
+- `--cwd /path` — working directory for the task
+- `--timeout SECS` — max runtime in seconds (default: 1800)
+- `--channel discord` — where to send results (default: discord)
 
-```bash
-JCODE_NO_TELEMETRY=1 jcode --provider claude -C /path/to/project run "your task" 2>&1 | \
-  discord-pipe --webhook "$WEBHOOK_URL" --tag "$SESSION_NAME" --window-ms 3000 --max-lines 40
+### 2. Watch for results (optional — auto-registered by fabric-submit)
+
+If you need to manually register a watcher for an existing task:
+
+```
+/fabric-watch <task-uuid> discord
 ```
 
-### 3. Delete webhook when done
+### 3. Inspect results
 
-```bash
-WEBHOOK_ID=$(echo "$WEBHOOK_URL" | grep -oP '(?<=webhooks/)\d+')
-curl -s -X DELETE "https://discord.com/api/v10/webhooks/$WEBHOOK_ID" \
-  -H "Authorization: Bot $OC_TOKEN"
+```
+/fabric-history                    # recent task history
+/fabric-history --status done      # completed tasks only
+/fabric-history --since 1d         # last 24 hours
+/fabric-logs <task-uuid>           # summary of a task's output
+/fabric-logs <task-uuid> --full    # full output (multi-message)
+/fabric-logs --in-progress         # list currently running tasks
 ```
 
-## Quick one-off (no webhook)
+## Quick one-off (no fabric)
 
 ```bash
 JCODE_NO_TELEMETRY=1 jcode --provider claude -C /path/to/project run "your task" 2>&1
