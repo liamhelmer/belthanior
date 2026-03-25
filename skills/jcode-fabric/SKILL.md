@@ -108,7 +108,7 @@ fabric-workflow --spec /path/to/workflow.toml [--dry-run]
 fabric-workflow \
   --repo /path/to/repo \
   --feature "my-feature-name" \
-  --notify-channel 1485151340614254673 \
+  --notify-channel 1486250884001173544 \
   -- phase1_name "task1 prompt" "task2 prompt" \
   ::: phase2_name "task1 prompt"
 ```
@@ -118,7 +118,7 @@ fabric-workflow \
 ```toml
 repo = "/path/to/repo"
 feature = "my-feature-name"
-notify_channel = "1485151340614254673"
+notify_channel = "1486250884001173544"
 base_branch = "main"                    # optional, default: main
 
 [[phase]]
@@ -149,7 +149,7 @@ tasks = [
 | `--spec FILE` | TOML workflow spec file | - |
 | `--repo PATH` | Repository path | - |
 | `--feature NAME` | Feature name (branch naming) | - |
-| `--notify-channel ID` | Discord channel for notifications | `1485151340614254673` (#mxdx) |
+| `--notify-channel ID` | Discord channel for notifications | `1486250884001173544` (#coding-agent-logs) |
 | `--base-branch NAME` | Base branch to target | `main` |
 | `--dry-run` | Print actions without executing | `false` |
 
@@ -169,7 +169,7 @@ tasks = [
 cat > /tmp/my-feature.toml <<'EOF'
 repo = "/home/openclaw/.openclaw/workspace/mxdx"
 feature = "add-retry-logic"
-notify_channel = "1485151340614254673"
+notify_channel = "1486250884001173544"
 
 [[phase]]
 name = "types"
